@@ -1,1 +1,1 @@
-export type TRoom = 'blue' | 'red';
+export type TRoom = ""
