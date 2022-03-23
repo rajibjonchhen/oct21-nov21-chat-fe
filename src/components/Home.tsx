@@ -4,6 +4,7 @@ import { io } from 'socket.io-client'
 import { FormEvent, KeyboardEventHandler, useEffect, useState } from 'react'
 import User from '../types/IUser'
 import Message from '../types/IMessage'
+import { TRoom } from '../types/TRoom'
 
 const ADDRESS = 'http://localhost:3030'
 const socket = io(ADDRESS, { transports: ['websocket'] })
@@ -39,6 +40,8 @@ const Home = () => {
   const [onlineUsers, setOnlineUsers] = useState<User[]>([])
   const [chatHistory, setChatHistory] = useState<Message[]>([])
 
+  const [room, setRoom] = useState<TRoom>('blue')
+
   useEffect(() => {
     // we need to launch this event listener JUST ONCE!
     // not every time the component re-renders
@@ -56,6 +59,11 @@ const Home = () => {
         // this is for the already connected clients!
         // will never be sent to a user that just logged in
         console.log('Look! another client connected!')
+        fetchOnlineUsers()
+      })
+
+      socket.on('disconnectedUser', () => {
+        console.log('Another client disconnected, refreshing the list...')
         fetchOnlineUsers()
       })
 
@@ -78,6 +86,7 @@ const Home = () => {
     socket.emit('setUsername', {
       // username: username
       username,
+      room
     })
   }
 
@@ -111,10 +120,14 @@ const Home = () => {
       timestamp: Date.now(),
     }
 
-    socket.emit('sendmessage', messageToSend)
+    socket.emit('sendmessage', { message: messageToSend, room })
     setChatHistory([...chatHistory, messageToSend])
     // [...chatHistory] <-- creates an exact copy of chatHistory
     setMessage('')
+  }
+
+  const handleToggleRoom = () => {
+    setRoom(room => (room === 'blue' ? 'red' : 'blue'))
   }
 
   return (
@@ -123,7 +136,7 @@ const Home = () => {
         <Col md={10} className='d-flex flex-column justify-content-between'>
           {/* MAIN VIEW COL */}
           {/* TOP SECTION: USERNAME INPUT FIELD */}
-          <Form onSubmit={handleUsernameSubmit}>
+          <Form onSubmit={handleUsernameSubmit} className='d-flex'>
             <Form.Control
               type='text'
               placeholder='Enter your username'
@@ -131,12 +144,21 @@ const Home = () => {
               onChange={(e) => setUsername(e.target.value)}
               disabled={isLoggedIn}
             />
+            <Button className='ml-2'
+              onClick={handleToggleRoom}
+              variant={room === 'blue' ? 'primary' : 'danger'}
+              disabled={isLoggedIn}
+            >
+              Room
+            </Button>
           </Form>
           {/* MIDDLE SECTION: CHAT HISTORY */}
           <ListGroup>
             {chatHistory.map((message) => (
-              <ListGroup.Item key={message.timestamp}>
+              <ListGroup.Item key={message.timestamp} className="d-flex">
+                <strong className="d-inline-block" style={{ minWidth: 80 }}>{message.sender}</strong>
                 {message.text}
+                <span className='ml-auto text-muted'>{new Date(message.timestamp).toLocaleTimeString()}</span>
               </ListGroup.Item>
             ))}
           </ListGroup>
@@ -155,9 +177,11 @@ const Home = () => {
           {/* ONLINE USERS COL */}
           <div className='mb-3'>Connected users:</div>
           <ListGroup>
-            {onlineUsers.map((user) => (
-              <ListGroup.Item key={user.id}>{user.username}</ListGroup.Item>
-            ))}
+            {onlineUsers
+              .filter(user => user.room === room)
+              .map((user) => (
+                <ListGroup.Item key={user.id}>{user.username}</ListGroup.Item>
+              ))}
           </ListGroup>
         </Col>
       </Row>
