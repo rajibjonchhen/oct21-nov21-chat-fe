@@ -1,0 +1,7 @@
+.message-box{
+background-color: rgba(161, 207, 245, 0.644);
+border-radius: 15px;
+border: 1px solid white;
+padding : 10px;
+max-width : 300px
+}

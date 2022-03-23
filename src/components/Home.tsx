@@ -1,10 +1,11 @@
 import 'bootstrap/dist/css/bootstrap.min.css'
-import { Container, Row, Col, Form, ListGroup, Button, ListGroupItem } from 'react-bootstrap'
+import { Container, Row, Col, Form } from 'react-bootstrap'
 import { io } from 'socket.io-client'
 import { FormEvent, KeyboardEventHandler, useEffect, useState } from 'react'
 import User from '../types/IUser'
 import Message from '../types/IMessage'
 import { TRoom } from '../types/TRoom'
+import './home.css'
 
 const ADDRESS = 'http://localhost:3030'
 const socket = io(ADDRESS, { transports: ['websocket'] })
@@ -100,9 +101,9 @@ const Home = () => {
   return (
     <Container fluid className='px-4 mt-3'>
       <Row style={{ height: '95vh' }}>
-        <Col md={10} className='d-flex flex-column justify-content-between'>
+        <Col md={10} className='d-flex flex-column justify-content-between w-100'  style={{backgroundColor:'white'}}>
           
-          <Form onSubmit={handleUsernameSubmit}>
+          <Form onSubmit={handleUsernameSubmit} >
             <Form.Control
               type='text'
               placeholder='Enter your username'
@@ -112,15 +113,30 @@ const Home = () => {
             />
           </Form>
           {/* MIDDLE SECTION: CHAT HISTORY */}
-          <ListGroup>
-            {chatHistory.map((message) => (
-              <ListGroup.Item key={message.timestamp} className='d-flex'>
-               <span style={{ fontWeight:"bolder"}}> {message.sender} : </span> 
-               {message.text}
-               <span className="ml-auto text-muted" style={{fontSize:"12px", fontWeight:"bolder"}}> {new Date(message.timestamp).toLocaleTimeString()} : </span> 
-              </ListGroup.Item>
+          <p>Chat box ---{room.toUpperCase()} ---</p>
+          <ul>
+            {chatHistory.map((message) => (<>
+            {message.sender === username?
+             <li key={message.timestamp} className='list-unstyled text-right w-100 my-3'>
+               <p className='message-box m-0 ml-auto' >
+             <span style={{fontSize:'10px', fontWeight:'bold'}}> {message.sender} </span> 
+             <br/> {message.text}
+               </p>
+             <span className="text-muted" style={{fontSize:"10px", fontWeight:"bolder"}}> 
+              {new Date(message.timestamp).toLocaleTimeString()} </span> 
+            </li> :
+              <li key={message.timestamp} className='list-unstyled text-left w-100 m-3'>
+                <p className='message-box m-0 mr-auto' >
+               <span style={{fontSize:'10px', fontWeight:'bold'}}> {message.sender} </span> 
+               <br/> {message.text}
+               </p>
+               <span className="text-muted" style={{fontSize:"10px", fontWeight:"bold"}}> 
+               {new Date(message.timestamp).toLocaleTimeString()} </span> 
+              </li>
+              }
+            </>
             ))}
-          </ListGroup>
+          </ul>
           {/* BOTTOM SECTION: NEW MESSAGE INPUT FIELD */}
           <Form onSubmit={handleMessageSubmit}>
             <Form.Control
@@ -132,24 +148,24 @@ const Home = () => {
             />
           </Form>
         </Col>
-        <Col md={2}>
+        <Col md={2} style={{backgroundColor:'rgb(245,248,250)'}}>
           {/* ONLINE USERS COL */}
           <div className='mb-3'>Connected users:</div>
-          <ListGroup>
+          <ul className='list-unstyled'>
             {onlineUsers
             // .filter(user => user.room === room)
             .map((user) => (
-              <ListGroup.Item key={user.id} className={"pointer " +`${room===user.id?'bg-secondary text-white':""}`} onClick={() => setRoom(user.id)}> {user.username}</ListGroup.Item>
+              <li key={user.id} className={"pointer " +`${room===user.id?'bg-secondary text-white':""}`} onClick={() => setRoom(user.id)}> {user.username}</li>
             ))}
-          </ListGroup>
+          </ul>
 
           <div className='my-3'>Chat Group</div>
 
-          <ListGroup>
-            <ListGroup.Item className={"pointer " +`${room==="timepass"? 'bg-secondary text-white':""}`} onClick={() => setRoom("timepass")}>Timepass</ListGroup.Item>
-            <ListGroup.Item className={"pointer " +`${room==="project"? 'bg-secondary text-white':""}`}  onClick={() => setRoom("project")}>Project </ListGroup.Item>
-            <ListGroup.Item className={"pointer " +`${room==="game"? 'bg-secondary text-white':""}`}  onClick={() => setRoom("game")}>Game </ListGroup.Item>
-          </ListGroup>
+          <ul className='list-unstyled'>
+            <li className={"pointer " +`${room==="timepass"? 'bg-secondary text-white':""}`} onClick={() => setRoom("timepass")}>Timepass</li>
+            <li className={"pointer " +`${room==="project"? 'bg-secondary text-white':""}`}  onClick={() => setRoom("project")}>Project </li>
+            <li className={"pointer " +`${room==="game"? 'bg-secondary text-white':""}`}  onClick={() => setRoom("game")}>Game </li>
+          </ul>
         </Col>
       </Row>
     </Container>
